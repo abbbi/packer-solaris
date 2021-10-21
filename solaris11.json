@@ -1,0 +1,88 @@
+{
+  "variables": {
+      "user": "vagrant",
+      "password": "vagrant",
+      "disk_size": "40G",
+      "memory_size": "2048"
+  },
+
+  "builders": [
+    {
+      "boot_command": [
+        "27<enter><wait>",
+        "3<enter><wait10>",
+        "<wait10><wait10>",
+        "1<enter><wait10><wait10>",
+        "<f2><wait><wait><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "-vagrant<wait><tab>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "vagrant123<tab><wait>",
+        "vagrant123<tab><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<f2><wait>",
+        "<wait7m>",
+        "<f8><wait3m>",
+        "root<enter>vagrant123<enter>",
+        "useradd vagrant<enter>",
+        "sed 's/force_check//g' /usr/lib/security/pam_authtok_common >> /tmp/pam_authtok_common<enter>",
+        "mv /tmp/pam_authtok_common /usr/lib/security/pam_authtok_common<enter>",
+        "passwd vagrant<enter>vagrant<enter>vagrant<enter>",
+        "echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config<enter>",
+        "svcadm enable ssh<enter>",
+        "svcadm disable network/firewall<enter>",
+        "echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers<enter><wait>",
+        "/usr/gnu/bin/sed -i 's/^.*requiretty/#Defaults requiretty/' /etc/sudoers<enter><wait>",
+        "bootadm set-menu timeout=5<enter>",
+        "reboot<enter><wait1m>"
+      ],
+      "boot_wait": "95s",
+      "disk_size": "{{ user `disk_size`}}",
+      "memory": "{{ user `memory_size`}}",
+
+      "iso_checksum": "20489697e97bdcf14ff0c25de1b4cfda",
+      "iso_checksum_type": "md5",
+      "iso_url": "isos/sol-11_4-text-x86.iso",
+      "output_directory": "packer-solaris11-virtualbox",
+
+      "shutdown_command": "sudo /usr/sbin/init 5",
+      "ssh_password": "{{user `password`}}",
+      "ssh_port": 22,
+      "ssh_username": "{{user `user`}}",
+      "type": "qemu",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "disk_interface": "ide",
+      "net_device": "e1000",
+      "qemuargs": [[ "-cpu", "host" ]],
+      "disk_cache": "writethrough",
+      "vm_name": "packer-solaris-11"
+    }
+  ],
+  "post-processors": [
+    {
+      "compression_level": 9,
+      "output": "./builds/{{.Provider}}/solaris11.box",
+      "type": "vagrant"
+    }
+  ],
+  "provisioners": [
+    {
+      "execute_command": "echo 'vagrant' | sudo -S bash '{{.Path}}'",
+      "scripts": [
+        "scripts/solaris/postinstall.sh"
+      ],
+      "type": "shell"
+    }
+  ]
+}
